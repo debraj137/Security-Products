@@ -298,6 +298,9 @@ export default function AdminDashboardPage() {
                           <strong>{order.customerId?.fullName} | {order.productId?.name}</strong>
                           <span className={`status-badge status-${order.activationStatus}`}>{order.activationStatus}</span>
                         </div>
+                        <p style={{ color: "var(--muted)", margin: "6px 0" }}>
+                          {order.customerId?.email || "No email"} | {order.customerId?.phone || "No phone"} | {order.customerId?.installationLocation || "No installation location"}
+                        </p>
                         <p style={{ color: "var(--muted)" }}>Payment: {order.paymentStatus} | Order: {order.orderStatus}</p>
                         <p style={{ color: "var(--muted)", marginTop: 0 }}>Placed by: {order.placedBy?.fullName || "Customer self-service"}</p>
                         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -374,4 +377,5 @@ export default function AdminDashboardPage() {
     </ProtectedRoute>
   );
 }
+
 

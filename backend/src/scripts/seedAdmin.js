@@ -15,6 +15,7 @@ const run = async () => {
       email: (process.env.ADMIN_EMAIL || "admin@example.com").toLowerCase(),
       phone: "0000000000",
       address: "Admin address",
+      installationLocation: "Admin office",
       passwordHash,
       role: "admin",
       status: "active"
@@ -30,3 +31,5 @@ run().catch((error) => {
   console.error(error);
   process.exit(1);
 });
+
+
