@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import type { Route } from "next";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { authStorage } from "@/lib/auth";
@@ -13,12 +14,12 @@ export function ProductCard({ product, showAction = true }: { product: Product; 
     setUser(authStorage.getUser());
   }, []);
 
-  const ctaHref =
+  const ctaHref: Route =
     user?.role === "customer"
-      ? `/products?selected=${product._id}`
+      ? (`/products?selected=${product._id}` as Route)
       : user?.role === "admin"
         ? "/admin"
-        : `/register?plan=${product._id}`;
+        : (`/register?plan=${product._id}` as Route);
 
   const ctaLabel =
     user?.role === "customer"

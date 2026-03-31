@@ -11,7 +11,8 @@ export type Product = {
 };
 
 export type User = {
-  id: string;
+  _id?: string;
+  id?: string;
   fullName: string;
   email: string;
   phone: string;
@@ -33,6 +34,8 @@ export type Order = {
   activationNotes: string;
   purchaseDate: string;
   productId: Product;
+  customerId?: User;
+  placedBy?: User;
 };
 
 export type Notification = {

@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ProductCard } from "@/components/ProductCard";
 import { apiRequest } from "@/lib/api";
@@ -9,7 +9,7 @@ import { authStorage } from "@/lib/auth";
 import { formatCurrency } from "@/lib/currency";
 import { Product } from "@/types";
 
-export default function ProductsPage() {
+function ProductsContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [message, setMessage] = useState("");
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -101,5 +101,13 @@ export default function ProductsPage() {
         </div>
       )}
     </main>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<main className="container" style={{ padding: "28px 0 60px" }}><p style={{ color: "var(--muted)" }}>Loading products...</p></main>}>
+      <ProductsContent />
+    </Suspense>
   );
 }

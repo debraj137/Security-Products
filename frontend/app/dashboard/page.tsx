@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { StatCard } from "@/components/StatCard";
@@ -18,7 +18,7 @@ type Payment = {
   paymentDate: string;
 };
 
-export default function CustomerDashboardPage() {
+function CustomerDashboardContent() {
   const [user, setUser] = useState<User | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -106,5 +106,13 @@ export default function CustomerDashboardPage() {
         </section>
       </main>
     </ProtectedRoute>
+  );
+}
+
+export default function CustomerDashboardPage() {
+  return (
+    <Suspense fallback={<main className="container" style={{ padding: "28px 0 60px" }}><p style={{ color: "var(--muted)" }}>Loading dashboard...</p></main>}>
+      <CustomerDashboardContent />
+    </Suspense>
   );
 }

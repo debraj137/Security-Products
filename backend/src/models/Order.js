@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 const orderSchema = new mongoose.Schema(
   {
     customerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    placedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
     productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
     amount: { type: Number, required: true },
     paymentStatus: { type: String, enum: ["pending", "paid", "failed", "refunded"], default: "pending" },
@@ -17,3 +18,4 @@ const orderSchema = new mongoose.Schema(
 );
 
 export const Order = mongoose.model("Order", orderSchema);
+

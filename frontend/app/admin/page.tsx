@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { FormEvent, useEffect, useState } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -18,13 +18,32 @@ type DashboardData = {
   recentOrders: (Order & { customerId: User; productId: Product })[];
 };
 
+type SupportRequest = {
+  _id: string;
+  name: string;
+  email: string;
+  message: string;
+  status: string;
+};
+
+type ManualOrderResponse = {
+  order: Order & { customerId: User; productId: Product; placedBy?: User };
+  customer: User;
+  createdNewCustomer: boolean;
+  setupResetToken: string | null;
+};
+
 export default function AdminDashboardPage() {
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
-  const [orders, setOrders] = useState<(Order & { customerId: User; productId: Product })[]>([]);
+  const [orders, setOrders] = useState<(Order & { customerId: User; productId: Product; placedBy?: User })[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [supportRequests, setSupportRequests] = useState<{ _id: string; name: string; email: string; message: string; status: string }[]>([]);
+  const [customers, setCustomers] = useState<User[]>([]);
+  const [supportRequests, setSupportRequests] = useState<SupportRequest[]>([]);
   const [error, setError] = useState("");
   const [savingProductId, setSavingProductId] = useState<string | null>(null);
+  const [purchaseMode, setPurchaseMode] = useState<"existing" | "new">("existing");
+  const [submittingPurchase, setSubmittingPurchase] = useState(false);
+  const [purchaseFeedback, setPurchaseFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [productFeedback, setProductFeedback] = useState<Record<string, { type: "success" | "error"; message: string }>>({});
 
   const load = async () => {
@@ -32,16 +51,19 @@ export default function AdminDashboardPage() {
     if (!token) return;
 
     try {
-      const [dashboardData, ordersData, supportData, productsData] = await Promise.all([
+      setError("");
+      const [dashboardData, ordersData, supportData, productsData, customersData] = await Promise.all([
         apiRequest<DashboardData>("/admin/dashboard", { token }),
-        apiRequest<(Order & { customerId: User; productId: Product })[]>('/admin/orders', { token }),
-        apiRequest<{ _id: string; name: string; email: string; message: string; status: string }[]>('/admin/support-requests', { token }),
-        apiRequest<Product[]>('/products', { token })
+        apiRequest<(Order & { customerId: User; productId: Product; placedBy?: User })[]>("/admin/orders", { token }),
+        apiRequest<SupportRequest[]>("/admin/support-requests", { token }),
+        apiRequest<Product[]>("/products", { token }),
+        apiRequest<User[]>("/admin/customers", { token })
       ]);
       setDashboard(dashboardData);
       setOrders(ordersData);
       setSupportRequests(supportData);
       setProducts(productsData);
+      setCustomers(customersData);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to load admin dashboard");
     }
@@ -62,6 +84,64 @@ export default function AdminDashboardPage() {
     });
 
     load();
+  };
+
+  const submitManualOrder = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const token = authStorage.getToken();
+    if (!token) return;
+    const formElement = event.currentTarget;
+
+    setSubmittingPurchase(true);
+    setPurchaseFeedback(null);
+
+    try {
+      const form = new FormData(event.currentTarget);
+      const mode = String(form.get("customerMode") || "existing") as "existing" | "new";
+      const body: Record<string, unknown> = {
+        productId: String(form.get("productId") || ""),
+        paymentMethod: String(form.get("paymentMethod") || "manual"),
+        markAsPaid: form.get("markAsPaid") === "yes"
+      };
+
+      if (mode === "existing") {
+        body.existingCustomerId = String(form.get("existingCustomerId") || "");
+      } else {
+        body.fullName = String(form.get("fullName") || "");
+        body.email = String(form.get("email") || "");
+        body.phone = String(form.get("phone") || "");
+        body.address = String(form.get("address") || "");
+        body.companyName = String(form.get("companyName") || "");
+        body.gstDetails = String(form.get("gstDetails") || "");
+        body.installationLocation = String(form.get("installationLocation") || "");
+        body.referralSource = "Admin assisted purchase";
+      }
+
+      const result = await apiRequest<ManualOrderResponse>("/admin/orders/manual", {
+        method: "POST",
+        token,
+        body
+      });
+
+      const extra = result.createdNewCustomer && result.setupResetToken
+        ? ` Setup token for customer login: ${result.setupResetToken}`
+        : "";
+
+      setPurchaseFeedback({
+        type: "success",
+        message: `Order created for ${result.customer.fullName}.${extra}`
+      });
+      formElement.reset();
+      setPurchaseMode("existing");
+      await load();
+    } catch (err) {
+      setPurchaseFeedback({
+        type: "error",
+        message: err instanceof Error ? err.message : "Unable to create order."
+      });
+    } finally {
+      setSubmittingPurchase(false);
+    }
   };
 
   const updateProduct = async (event: FormEvent<HTMLFormElement>, productId: string) => {
@@ -129,6 +209,84 @@ export default function AdminDashboardPage() {
               <StatCard title="Active customers" value={dashboard.activeCustomers} />
             </div>
 
+            <section className="panel" style={{ padding: "1.2rem", marginBottom: 22 }}>
+              <h2 style={{ marginTop: 0 }}>Create assisted purchase</h2>
+              <p style={{ color: "var(--muted)", marginTop: 0 }}>Use this when the customer cannot register and buy on their own. You can attach the order to an existing customer or create the customer account during checkout.</p>
+              <form className="grid" onSubmit={submitManualOrder}>
+                <label className="field">
+                  <span>Customer mode</span>
+                  <select name="customerMode" value={purchaseMode} onChange={(event) => setPurchaseMode(event.target.value as "existing" | "new")}>
+                    <option value="existing">Existing customer</option>
+                    <option value="new">New customer</option>
+                  </select>
+                </label>
+
+                {purchaseMode === "existing" ? (
+                  <label className="field">
+                    <span>Select customer</span>
+                    <select name="existingCustomerId" required>
+                      <option value="">Choose a customer</option>
+                      {customers.map((customer) => (
+                        <option key={customer._id || customer.id} value={customer._id || customer.id}>
+                          {customer.fullName} ({customer.email})
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : (
+                  <>
+                    <label className="field"><span>Full name</span><input name="fullName" required={purchaseMode === "new"} /></label>
+                    <label className="field"><span>Email</span><input name="email" type="email" required={purchaseMode === "new"} /></label>
+                    <label className="field"><span>Phone</span><input name="phone" required={purchaseMode === "new"} /></label>
+                    <label className="field"><span>Address</span><textarea name="address" rows={3} required={purchaseMode === "new"} /></label>
+                    <label className="field"><span>Company name</span><input name="companyName" /></label>
+                    <label className="field"><span>GST details</span><input name="gstDetails" /></label>
+                    <label className="field"><span>Installation location</span><input name="installationLocation" /></label>
+                  </>
+                )}
+
+                <label className="field">
+                  <span>Product</span>
+                  <select name="productId" required>
+                    <option value="">Choose a product</option>
+                    {products.filter((product) => product.isActive).map((product) => (
+                      <option key={product._id} value={product._id}>
+                        {product.name} - INR {product.price}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="field">
+                  <span>Payment method</span>
+                  <select name="paymentMethod" defaultValue="manual">
+                    <option value="manual">Manual</option>
+                    <option value="cash">Cash</option>
+                    <option value="bank_transfer">Bank transfer</option>
+                    <option value="upi">UPI</option>
+                  </select>
+                </label>
+
+                <label className="field">
+                  <span>Payment status</span>
+                  <select name="markAsPaid" defaultValue="yes">
+                    <option value="yes">Mark as paid</option>
+                    <option value="no">Keep payment pending</option>
+                  </select>
+                </label>
+
+                {purchaseFeedback ? (
+                  <p style={{ margin: 0, color: purchaseFeedback.type === "success" ? "var(--success)" : "var(--danger)" }}>
+                    {purchaseFeedback.message}
+                  </p>
+                ) : null}
+
+                <button className="btn btn-primary" disabled={submittingPurchase}>
+                  {submittingPurchase ? "Creating order..." : "Create order for customer"}
+                </button>
+              </form>
+            </section>
+
             <section className="grid admin-split">
               <div className="grid">
                 <div className="panel" style={{ padding: "1.2rem" }}>
@@ -141,6 +299,7 @@ export default function AdminDashboardPage() {
                           <span className={`status-badge status-${order.activationStatus}`}>{order.activationStatus}</span>
                         </div>
                         <p style={{ color: "var(--muted)" }}>Payment: {order.paymentStatus} | Order: {order.orderStatus}</p>
+                        <p style={{ color: "var(--muted)", marginTop: 0 }}>Placed by: {order.placedBy?.fullName || "Customer self-service"}</p>
                         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                           <button className="btn btn-primary" onClick={() => changeActivation(order._id, "active")}>Activate</button>
                           <button className="btn btn-secondary" onClick={() => changeActivation(order._id, "inactive")}>Mark Inactive</button>

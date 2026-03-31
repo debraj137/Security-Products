@@ -4,6 +4,7 @@ import {
   getDashboard,
   getOrders,
   getSupportRequests,
+  createOrderForCustomer,
   updateOrderActivation,
   updateSupportRequest,
   upsertAdmin
@@ -17,6 +18,7 @@ router.use(authenticate, authorize("admin"));
 router.get("/dashboard", getDashboard);
 router.get("/customers", getCustomers);
 router.get("/orders", getOrders);
+router.post("/orders/manual", createOrderForCustomer);
 router.patch("/orders/:id/activate", updateOrderActivation);
 router.get("/support-requests", getSupportRequests);
 router.patch("/support-requests/:id", updateSupportRequest);

@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { apiRequest } from "@/lib/api";
 import { authStorage } from "@/lib/auth";
@@ -9,7 +9,7 @@ import { User } from "@/types";
 
 type AuthResponse = { token: string; user: User };
 
-export default function RegisterPage() {
+function RegisterContent() {
   const plan = useSearchParams().get("plan");
   const [form, setForm] = useState({
     fullName: "",
@@ -54,7 +54,7 @@ export default function RegisterPage() {
           Already have an account? <Link href="/login" style={{ color: "var(--accent-deep)" }}>Login</Link>
         </p>
         <form onSubmit={handleSubmit} className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}>
-          {[["fullName", "Full name", "text"],["email", "Email", "email"],["phone", "Phone number", "text"],["password", "Password", "password"],["confirmPassword", "Confirm password", "password"],["address", "Address", "text"],["companyName", "Company name", "text"],["gstDetails", "GST/business details", "text"],["installationLocation", "Installation location", "text"],["referralSource", "Referral/source", "text"]].map(([key, label, type]) => (
+          {[ ["fullName", "Full name", "text"], ["email", "Email", "email"], ["phone", "Phone number", "text"], ["password", "Password", "password"], ["confirmPassword", "Confirm password", "password"], ["address", "Address", "text"], ["companyName", "Company name", "text"], ["gstDetails", "GST/business details", "text"], ["installationLocation", "Installation location", "text"], ["referralSource", "Referral/source", "text"] ].map(([key, label, type]) => (
             <label className="field" key={key}>
               <span>{label}</span>
               <input
@@ -72,5 +72,13 @@ export default function RegisterPage() {
         </form>
       </div>
     </main>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<main className="container" style={{ padding: "28px 0 60px" }}><p style={{ color: "var(--muted)" }}>Loading registration...</p></main>}>
+      <RegisterContent />
+    </Suspense>
   );
 }
