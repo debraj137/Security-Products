@@ -104,8 +104,8 @@ export const createOrderForCustomer = async (req, res, next) => {
         throw new AppError("Customer not found", 404);
       }
     } else {
-      if (!fullName || !email || !phone || !address) {
-        throw new AppError("fullName, email, phone and address are required for a new customer");
+      if (!fullName || !email || !phone || !address || !installationLocation) {
+        throw new AppError("fullName, email, phone, address and installationLocation are required for a new customer");
       }
 
       const normalizedEmail = email.toLowerCase();
@@ -238,6 +238,7 @@ export const upsertAdmin = async (req, res, next) => {
         email: email.toLowerCase(),
         phone: "0000000000",
         address: "Admin address",
+        installationLocation: "Admin office",
         passwordHash,
         role: "admin",
         status: "active"
@@ -272,3 +273,5 @@ export const updateSupportRequest = async (req, res, next) => {
     next(error);
   }
 };
+
+

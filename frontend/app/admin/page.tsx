@@ -241,7 +241,7 @@ export default function AdminDashboardPage() {
                     <label className="field"><span>Address</span><textarea name="address" rows={3} required={purchaseMode === "new"} /></label>
                     <label className="field"><span>Company name</span><input name="companyName" /></label>
                     <label className="field"><span>GST details</span><input name="gstDetails" /></label>
-                    <label className="field"><span>Installation location</span><input name="installationLocation" /></label>
+                    <label className="field"><span>Installation location</span><input name="installationLocation" required={purchaseMode === "new"} /></label>
                   </>
                 )}
 
@@ -374,3 +374,4 @@ export default function AdminDashboardPage() {
     </ProtectedRoute>
   );
 }
+

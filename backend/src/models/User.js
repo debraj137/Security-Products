@@ -9,7 +9,7 @@ const userSchema = new mongoose.Schema(
     address: { type: String, required: true, trim: true },
     companyName: { type: String, default: "" },
     gstDetails: { type: String, default: "" },
-    installationLocation: { type: String, default: "" },
+    installationLocation: { type: String, required: true, trim: true },
     referralSource: { type: String, default: "" },
     role: { type: String, enum: ["customer", "admin"], default: "customer" },
     status: { type: String, enum: ["active", "inactive", "suspended"], default: "active" },
@@ -19,3 +19,4 @@ const userSchema = new mongoose.Schema(
 );
 
 export const User = mongoose.model("User", userSchema);
+

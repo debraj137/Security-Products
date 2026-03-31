@@ -59,7 +59,7 @@ function RegisterContent() {
               <span>{label}</span>
               <input
                 type={type}
-                required={["fullName", "email", "phone", "password", "confirmPassword", "address"].includes(key)}
+                required={["fullName", "email", "phone", "password", "confirmPassword", "address", "installationLocation"].includes(key)}
                 value={form[key as keyof typeof form]}
                 onChange={(e) => setForm((current) => ({ ...current, [key]: e.target.value }))}
               />
@@ -82,3 +82,4 @@ export default function RegisterPage() {
     </Suspense>
   );
 }
+

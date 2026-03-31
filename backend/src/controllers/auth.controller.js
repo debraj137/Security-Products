@@ -26,7 +26,7 @@ export const register = async (req, res, next) => {
       referralSource
     } = req.body;
 
-    if (!fullName || !email || !phone || !password || !confirmPassword || !address) {
+    if (!fullName || !email || !phone || !password || !confirmPassword || !address || !installationLocation) {
       throw new AppError("Please provide all required registration fields");
     }
 
@@ -148,3 +148,4 @@ export const resetPassword = async (req, res, next) => {
 export const getMe = async (req, res) => {
   res.json({ user: sanitizeUser(req.user) });
 };
+
