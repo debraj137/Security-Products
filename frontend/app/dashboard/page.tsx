@@ -71,14 +71,18 @@ function CustomerDashboardContent() {
             <h2 style={{ marginTop: 0 }}>Orders and activation status</h2>
             <div className="grid">
               {orders.map((order) => (
-                <div key={order._id} style={{ padding: "1rem", border: "1px solid var(--line)", borderRadius: 18 }}>
+                <div key={order._id} style={{ padding: "1rem", border: "1px solid var(--line)", borderRadius: 18, display: "grid", gap: 8 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                     <strong>{order.productId.name}</strong>
                     <span className={`status-badge status-${order.activationStatus}`}>{order.activationStatus}</span>
                   </div>
                   <p style={{ color: "var(--muted)" }}>Order status: {order.orderStatus} | Payment: {order.paymentStatus}</p>
                   <p>{order.activationStatus === "active" ? "Access granted. Your product usage area is unlocked." : "Awaiting admin activation before product usage is enabled."}</p>
-                  {order.activationStatus === "active" ? <Link href="/dashboard/access" className="btn btn-primary">Open Product Access</Link> : null}
+                  {order.activationStatus === "active" ? (
+                    <Link href="/dashboard/access" className="btn btn-primary" style={{ justifySelf: "start" }}>
+                      Open Product Access
+                    </Link>
+                  ) : null}
                 </div>
               ))}
               {!orders.length ? <p style={{ color: "var(--muted)" }}>No orders yet. Visit the products page to purchase a plan.</p> : null}
@@ -116,3 +120,7 @@ export default function CustomerDashboardPage() {
     </Suspense>
   );
 }
+
+
+
+
